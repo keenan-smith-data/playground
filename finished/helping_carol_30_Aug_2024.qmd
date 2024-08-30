@@ -1,0 +1,42 @@
+---
+title: "Untitled"
+format: html
+---
+
+
+```{r}
+library(tidytable)
+library(openxlsx2)
+```
+
+
+```{r}
+test <- fread(here::here("data", "scancode_SSCVWPEPCDRAH_20240829.txt"))
+
+test2 <- test |>
+  mutate(across(where(is.character), ~ stringr::str_remove_all(.x, "'")))
+
+names(test2) <- c("medID", "scancode")
+
+test_id_totals <- test2 |>
+  group_by(medID) |>
+  summarize(total_medID = n()) |>
+  arrange(-total_medID)
+
+test_wb <- wb_workbook() 
+
+test_wb <- test_wb |>
+  wb_add_worksheet(sheet = "Main Data") |>
+  wb_add_data(sheet = "Main Data", x = test2) |>
+  wb_add_worksheet(sheet = "Totals by medID") |>
+  wb_add_data(sheet = "Totals by medID", x = test_id_totals)
+wb_open(test_wb)
+
+wb_save(test_wb, here::here("output", "scancode_SSCVWPEPCDRAH_20240829.xlsx"))
+```
+
+
+
+```{r}
+write_xlsx(test_wb, file = here::here("output", "scancode_SSCVWPEPCDRAH_20240829.xlsx"))
+```
